@@ -18,10 +18,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
+  // --- NEW: ATHLETE STATS STATE ---
+  double _sleepValue = 5.0; // Default middle value
+  double _physicalValue = 5.0;
+
   @override
   void initState() {
     super.initState();
-    // Setup smooth entrance animation
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -31,7 +34,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       curve: Curves.easeOutQuart,
     );
 
-    // Fetch user data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (userProvider.user == null) {
@@ -47,11 +49,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  // UPDATED: Now accepts the mood directly to save immediately
-  Future<void> _submitMood(BuildContext context, String moodKeyword) async {
+  Future<void> _submitMood(BuildContext context) async {
+    final moodProvider = Provider.of<MoodProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final moodKeyword = moodProvider.todaysMoodKeyword;
     final userId = userProvider.user?.id;
 
+    if (moodKeyword == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a mood first!')),
+      );
+      return;
+    }
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User not found. Please restart.')),
@@ -60,15 +69,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
 
     const String apiUrl = 'https://mindsport-backend.onrender.com/api/moods';
+
+    // --- UPDATED: SENDING ATHLETE STATS ---
     final Map<String, dynamic> body = {
       'mood': moodKeyword,
       'reason': '',
       'userId': userId,
+      'sleep': _sleepValue.round(),    // Send as integer (1-10)
+      'physical': _physicalValue.round() // Send as integer (1-10)
     };
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Saving mood...'),
+        content: const Text('Saving daily check-in...'),
         backgroundColor: MindSportTheme.softLavender,
         duration: const Duration(seconds: 1),
       ),
@@ -85,7 +98,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         if (response.statusCode == 200 || response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: const Text('Mood saved successfully!'), backgroundColor: MindSportTheme.primaryGreen),
+            SnackBar(
+              content: const Text('Daily stats saved successfully!'),
+              backgroundColor: MindSportTheme.primaryGreen,
+            ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -117,13 +133,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
       body: Stack(
         children: [
-          // --- 1. ABSTRACT BACKGROUND ---
-          CustomPaint(
-            painter: _BackgroundPainter(),
-            size: Size.infinite,
-          ),
+          CustomPaint(painter: _BackgroundPainter(), size: Size.infinite),
 
-          // --- 2. CONTENT ---
           FadeTransition(
             opacity: _fadeAnimation,
             child: SingleChildScrollView(
@@ -131,54 +142,56 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Text(
                       '🌱 Hello, $userName!',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: MindSportTheme.darkText,
-                      ),
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: MindSportTheme.darkText),
                     ),
                   ),
                   const SizedBox(height: 30),
 
-                  // Mood Card
+                  // 1. Mood Card
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.0,
                     child: _buildMoodCard(context, moodProvider),
                   ),
-                  const SizedBox(height: 24), // Increased spacing slightly since button is gone
+                  const SizedBox(height: 16),
 
-                  // Quote Card
+                  // --- 2. NEW: PERFORMANCE LOG ---
+                  _FadeInSlide(
+                    animation: _fadeAnimation,
+                    delay: 0.1,
+                    child: _buildStatsCard(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 3. Save Button
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.2,
-                    child: _buildQuoteCard(),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Reminders Card
-                  _FadeInSlide(
-                    animation: _fadeAnimation,
-                    delay: 0.3,
-                    child: _buildNavigationCard(
-                      context: context,
-                      title: 'Check your reminders',
-                      color: MindSportTheme.softLavender,
-                      icon: Icons.alarm,
-                      routeName: '/reminders',
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => _submitMood(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: MindSportTheme.primaryGreen,
+                          foregroundColor: Colors.white,
+                          elevation: 4,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        ),
+                        child: const Text('Save Daily Check-in', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // Mood Calendar Button (Moved here)
+                  // 4. Navigation Cards
                   _FadeInSlide(
                     animation: _fadeAnimation,
-                    delay: 0.4,
+                    delay: 0.25,
                     child: _buildNavigationCard(
                       context: context,
                       title: 'View Mood Calendar',
@@ -187,7 +200,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       routeName: '/history',
                     ),
                   ),
+                  const SizedBox(height: 24),
 
+                  _FadeInSlide(
+                    animation: _fadeAnimation,
+                    delay: 0.3,
+                    child: _buildQuoteCard(),
+                  ),
+                  const SizedBox(height: 24),
+
+                  _FadeInSlide(
+                    animation: _fadeAnimation,
+                    delay: 0.4,
+                    child: _buildNavigationCard(
+                      context: context,
+                      title: 'Check your reminders',
+                      color: MindSportTheme.softLavender,
+                      icon: Icons.alarm,
+                      routeName: '/reminders',
+                    ),
+                  ),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -196,15 +228,74 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/chat');
-        },
+        onPressed: () => Navigator.pushNamed(context, '/chat'),
         backgroundColor: MindSportTheme.primaryGreen,
         child: const Icon(Icons.chat_bubble_outline, color: Colors.white),
       ),
     );
   }
 
+  // --- NEW WIDGET: SLIDERS ---
+  Widget _buildStatsCard() {
+    return Card(
+      color: Colors.white.withOpacity(0.85), // Clean white background for data
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Recovery & Load",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: MindSportTheme.darkText),
+            ),
+            const SizedBox(height: 20),
+
+            // Sleep Slider
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Sleep Quality", style: TextStyle(fontWeight: FontWeight.w600)),
+                Text("${_sleepValue.round()}/10", style: const TextStyle(fontWeight: FontWeight.bold, color: MindSportTheme.primaryGreen)),
+              ],
+            ),
+            Slider(
+              value: _sleepValue,
+              min: 1,
+              max: 10,
+              divisions: 9,
+              activeColor: MindSportTheme.primaryGreen,
+              inactiveColor: MindSportTheme.softGreen,
+              onChanged: (val) => setState(() => _sleepValue = val),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Physical Slider
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Physical Strain", style: TextStyle(fontWeight: FontWeight.w600)),
+                Text("${_physicalValue.round()}/10", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
+              ],
+            ),
+            Slider(
+              value: _physicalValue,
+              min: 1,
+              max: 10,
+              divisions: 9,
+              activeColor: Colors.orangeAccent,
+              inactiveColor: Colors.orange.withOpacity(0.3),
+              onChanged: (val) => setState(() => _physicalValue = val),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- EXISTING WIDGETS ---
   Widget _buildMoodCard(BuildContext context, MoodProvider moodProvider) {
     final Map<String, String> moodMap = {
       '😄': 'excited', '😊': 'happy', '😐': 'neutral', '😢': 'sad', '😠': 'angry',
@@ -229,12 +320,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   child: GestureDetector(
                     onTap: () {
                       final keyword = moodMap[emoji];
-                      if (keyword != null) {
-                        // 1. Visually select it
-                        moodProvider.selectMood(keyword);
-                        // 2. Automatically save it
-                        _submitMood(context, keyword);
-                      }
+                      if (keyword != null) moodProvider.selectMood(keyword);
                     },
                     child: Container(
                       color: Colors.transparent,

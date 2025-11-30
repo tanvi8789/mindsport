@@ -18,6 +18,8 @@ import 'screens/community_forum.dart';
 import 'screens/profile_screen.dart';
 import 'screens/reminders_screen.dart';
 import 'screens/mood_calender.dart';
+import 'screens/resources_screen.dart';
+import 'screens/exercises_screen.dart';
 
 // --- THEME DEFINITION ---
 class MindSportTheme {
@@ -132,6 +134,8 @@ class MindSportApp extends StatelessWidget {
         '/forum': (context) => CommunityForum(),
         '/chat': (context) => const ChatPage(),
         '/history': (context) => const MoodHistoryScreen(),
+        '/resources': (context) => const ResourcesScreen(),
+        '/exercises': (context) => const ExercisesScreen(),
       },
     );
   }
