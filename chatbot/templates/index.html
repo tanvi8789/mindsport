@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Athlete Mental Health Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Chat Sessions</h2>
+                <div class="user-id-section">
+                    <label for="user-id">User ID:</label>
+                    <input type="text" id="user-id" value="001">
+                    <button onclick="loadSessions()">Load</button>
+                </div>
+            </div>
+            <div class="sessions-list" id="sessions-list">
+                <!-- Sessions will be loaded here -->
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3 id="session-name">New Chat</h3>
+                <button onclick="createNewSession()" class="new-chat-btn">New Chat</button>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="welcome-message">
+                    <p>Welcome! I'm your mental health assistant. How can I support you today?</p>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="input-group">
+                    <input type="text" id="message-input" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()" id="send-btn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
