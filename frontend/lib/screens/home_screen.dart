@@ -4,9 +4,9 @@ import 'package:mindsport/services/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mindsport/screens/sidebar.dart';
 import 'dart:convert';
-import 'dart:ui'; // Required for BackdropFilter (Glassmorphism)
+import 'dart:ui';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart'; // Ensure you have this in pubspec.yaml for date formatting
+import 'package:intl/intl.dart';
 import 'package:mindsport/main.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,12 +20,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  // --- NEW: SLIDER STATE ---
   double _sleepValue = 5.0;
   double _physicalValue = 5.0;
 
-  // --- NEW: QUOTE LOGIC ---
-  // A curated list of athlete-focused quotes
   final List<String> _quotes = [
     "The only way to prove that you’re a good sport is to lose.",
     "It is not the mountain we conquer, but ourselves.",
@@ -40,7 +37,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   ];
 
   String _getDailyQuote() {
-    // Pick a quote based on the day of the year so it changes every 24h
     final now = DateTime.now();
     final dayOfYear = int.parse(DateFormat("D").format(now));
     return _quotes[dayOfYear % _quotes.length];
@@ -67,9 +63,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final moodProvider = Provider.of<MoodProvider>(context, listen: false);
+
       if (userProvider.user == null) {
         userProvider.fetchUserData();
       }
+
+      // --- NEW: Fetch history to calculate streak ---
+      moodProvider.fetchMoodHistory();
+
       _animationController.forward();
     });
   }
@@ -81,12 +83,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _submitMood(BuildContext context) async {
-    // ... (Your existing submit logic - Unchanged) ...
-    // Just copy the logic from the previous file here for brevity
-    // Or I can re-paste it if you need it.
-    // For this update, the logic inside _submitMood doesn't change.
-
-    // --- TEMPORARY COPY OF LOGIC ---
     final moodProvider = Provider.of<MoodProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final moodKeyword = moodProvider.todaysMoodKeyword;
@@ -120,6 +116,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         if (response.statusCode == 200 || response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Stats saved successfully!'), backgroundColor: MindSportTheme.primaryGreen));
+          // Refresh history to update streak
+          moodProvider.fetchMoodHistory();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response.statusCode}'), backgroundColor: Colors.red));
         }
@@ -136,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final moodProvider = Provider.of<MoodProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
     final userName = userProvider.user?.name ?? 'Athlete';
-    final todayDate = DateFormat.yMMMMd().format(DateTime.now()); // e.g. "July 12, 2025"
+    final todayDate = DateFormat.yMMMMd().format(DateTime.now());
 
     return Scaffold(
       drawer: const AppSidebar(),
@@ -145,7 +143,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         elevation: 0,
         iconTheme: const IconThemeData(color: MindSportTheme.darkText),
         actions: [
-          // Profile Icon Shortcut
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: CircleAvatar(
@@ -169,20 +166,48 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- 1. PROFESSIONAL HEADER ---
+                  // --- HEADER WITH STREAK ---
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          todayDate.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            color: Colors.grey.shade600,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              todayDate.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            // --- NEW: STREAK CHIP ---
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.orangeAccent.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.orangeAccent.withOpacity(0.5)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.local_fire_department, size: 16, color: Colors.orange),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "${moodProvider.currentStreak} Day Streak",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepOrange,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -198,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 30),
 
-                  // --- 2. DAILY QUOTE (Glass Card) ---
+                  // 2. DAILY QUOTE
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.0,
@@ -229,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 12),
 
-                  // --- 3. MOOD & STATS ---
+                  // 3. MOOD & STATS
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.1,
@@ -258,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
-                        child: const Text('Log Performance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        child: const Text('Save Daily Check-in', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ),
@@ -270,8 +295,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 12),
 
-                  // --- 4. DASHBOARD GRID (New Layout) ---
-                  // Moving History and Reminders side-by-side
+                  // 4. DASHBOARD GRID
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.4,
@@ -315,17 +339,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // --- NEW: GLASS CARD HELPER ---
   Widget _buildGlassCard({required Widget child, Color color = Colors.white}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // The blur effect
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.6), // Translucent
+            color: color.withOpacity(0.6),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
           ),
@@ -335,7 +358,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // --- NEW: GRID CARD HELPER ---
   Widget _buildGridCard({
     required BuildContext context,
     required String title,
@@ -347,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       onTap: () => Navigator.pushNamed(context, routeName),
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        height: 130, // Fixed height for square-ish look
+        height: 130,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
             color: color.withOpacity(0.85),
@@ -383,9 +405,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-
-  // --- REUSED WIDGETS ---
-  // (Stats Card and Mood Card same as before, just wrapped in Glass styling implicitly or kept clean)
 
   Widget _buildStatsCard() {
     return _buildGlassCard(
@@ -467,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 }
 
-// --- Background Painter (Same as before) ---
+// Reuse background and animation widgets
 class _BackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
