@@ -1,18 +1,30 @@
-Backend (Node.js)
-
+# -----------------------------
+# Backend (Node.js)
+# -----------------------------
 backend/node_modules/
 backend/.env
 
-Frontend (Flutter)
-
+# -----------------------------
+# Frontend (Flutter)
+# -----------------------------
 frontend/build/
 frontend/.dart_tool/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
 frontend/.pub-cache/
+frontend/pubspec.lock
+
+# iOS
 frontend/ios/Pods/
 frontend/ios/Podfile.lock
 frontend/ios/.symlinks/
+
+# Platform-specific ephemeral build dirs
 frontend/windows/flutter/ephemeral/
 frontend/linux/flutter/ephemeral/
 frontend/macos/flutter/ephemeral/
+
+# -----------------------------
+# Chatbot (Python)
+# -----------------------------
+chatbot/venv/

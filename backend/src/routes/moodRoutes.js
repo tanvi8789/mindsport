@@ -12,4 +12,9 @@ router.route('/').post(createOrUpdateMood);
 // Now 'protect' is defined and this will work
 router.route('/history').get(protect, getMoodHistory);
 
+import { getTodaysMoodByUserId } from '../controllers/moodController.js';
+
+router.get('/today/:userId', getTodaysMoodByUserId);
+
+
 export default router;

@@ -59,3 +59,30 @@ export const getMoodHistory = async (req, res) => {
     res.status(500).json({ message: "Server error fetching moods" });
   }
 };
+
+export const getTodaysMoodByUserId = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const mood = await Mood.findOne({
+      user: userId,
+      createdAt: { $gte: today, $lt: tomorrow }
+    });
+
+    res.status(200).json(mood || { message: "No mood logged for today." });
+
+  } catch (error) {
+    console.error("Error fetching today's mood:", error);
+    res.status(500).json({ message: "Server error fetching today's mood" });
+  }
+};

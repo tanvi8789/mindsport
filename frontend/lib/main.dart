@@ -20,6 +20,7 @@ import 'screens/reminders_screen.dart';
 import 'screens/mood_calender.dart';
 import 'screens/resources_screen.dart';
 import 'screens/exercises_screen.dart';
+import 'screens/chat_session_screen.dart';
 
 // --- THEME DEFINITION ---
 class MindSportTheme {
@@ -125,6 +126,7 @@ class MindSportApp extends StatelessWidget {
       home: const AuthWrapper(),
 
       // --- ROUTES ---
+      // In the routes section, add:
       routes: {
         '/home': (context) => const HomeScreen(),
         '/login': (context) => const LoginScreen(),
@@ -133,6 +135,7 @@ class MindSportApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(),
         '/forum': (context) => CommunityForum(),
         '/chat': (context) => const ChatPage(),
+        '/chat-sessions': (context) => const ChatSessionScreen(), // Add this line
         '/history': (context) => const MoodHistoryScreen(),
         '/resources': (context) => const ResourcesScreen(),
         '/exercises': (context) => const ExercisesScreen(),
