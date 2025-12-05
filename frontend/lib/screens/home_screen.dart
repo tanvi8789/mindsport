@@ -8,6 +8,7 @@ import 'dart:ui';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:mindsport/main.dart';
+import 'package:mindsport/widgets/performance_chart.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
+  // State for Athlete Stats
   double _sleepValue = 5.0;
   double _physicalValue = 5.0;
 
@@ -69,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         userProvider.fetchUserData();
       }
 
-      // --- NEW: Fetch history to calculate streak ---
+      // Fetch history to calculate and show streak
       moodProvider.fetchMoodHistory();
 
       _animationController.forward();
@@ -99,11 +101,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     const String apiUrl = 'https://mindsport-backend.onrender.com/api/moods';
     final Map<String, dynamic> body = {
-      'mood': moodKeyword, 'reason': '', 'userId': userId,
-      'sleep': _sleepValue.round(), 'physical': _physicalValue.round()
+      'mood': moodKeyword,
+      'reason': '',
+      'userId': userId,
+      'sleep': _sleepValue.round(),
+      'physical': _physicalValue.round()
     };
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Saving daily stats...'), backgroundColor: MindSportTheme.softLavender, duration: const Duration(seconds: 1)));
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: const Text('Saving daily stats...'), backgroundColor: MindSportTheme.softLavender, duration: const Duration(seconds: 1))
+    );
 
     try {
       final response = await http.post(
@@ -115,16 +122,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         if (response.statusCode == 200 || response.statusCode == 201) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Stats saved successfully!'), backgroundColor: MindSportTheme.primaryGreen));
-          // Refresh history to update streak
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: const Text('Stats saved successfully!'), backgroundColor: MindSportTheme.primaryGreen)
+          );
           moodProvider.fetchMoodHistory();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${response.statusCode}'), backgroundColor: Colors.red));
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error: ${response.statusCode}'), backgroundColor: Colors.red)
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connection Error'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Connection Error'), backgroundColor: Colors.red)
+        );
       }
     }
   }
@@ -148,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: CircleAvatar(
               backgroundColor: MindSportTheme.primaryGreen.withOpacity(0.2),
               child: Text(
-                userName.substring(0, 1).toUpperCase(),
+                userName.isNotEmpty ? userName.substring(0, 1).toUpperCase() : 'A',
                 style: const TextStyle(color: MindSportTheme.primaryGreen, fontWeight: FontWeight.bold),
               ),
             ),
@@ -184,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 color: Colors.grey.shade600,
                               ),
                             ),
-                            // --- NEW: STREAK CHIP ---
+                            // --- STREAK CHIP ---
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
@@ -223,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 30),
 
-                  // 2. DAILY QUOTE
+                  // 2. DAILY QUOTE (Glass Card)
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.0,
@@ -254,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 12),
 
-                  // 3. MOOD & STATS
+                  // 3. MOOD CARD
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.1,
@@ -262,6 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 16),
 
+                  // 4. STATS SLIDERS
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.2,
@@ -269,6 +282,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 16),
 
+                  // 5. SAVE BUTTON
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.3,
@@ -289,13 +303,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 32),
 
+                  // --- PERFORMANCE CHART SECTION ---
+                  _FadeInSlide(
+                    animation: _fadeAnimation,
+                    delay: 0.35,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Performance Trends",
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: MindSportTheme.darkText),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildGlassCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Sleep vs. Strain",
+                                style: TextStyle(fontSize: 14, color: Colors.black54),
+                              ),
+                              const SizedBox(height: 20),
+                              // Pass history to chart
+                              PerformanceChart(history: moodProvider.moodHistory),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
                   const Text(
                     "Quick Access",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: MindSportTheme.darkText),
                   ),
                   const SizedBox(height: 12),
 
-                  // 4. DASHBOARD GRID
+                  // 6. DASHBOARD GRID
                   _FadeInSlide(
                     animation: _fadeAnimation,
                     delay: 0.4,
@@ -338,6 +383,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
+
+  // --- WIDGET BUILDERS ---
 
   Widget _buildGlassCard({required Widget child, Color color = Colors.white}) {
     return ClipRRect(
@@ -486,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 }
 
-// Reuse background and animation widgets
+// --- Background Painter ---
 class _BackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -502,16 +549,37 @@ class _BackgroundPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+// --- Animation Widget ---
+// THIS IS THE CLASS THAT WAS CAUSING THE ERROR
 class _FadeInSlide extends StatelessWidget {
   final Animation<double> animation;
   final double delay;
   final Widget child;
-  const _FadeInSlide({required this.animation, required this.delay, required this.child});
+
+  const _FadeInSlide({
+    required this.animation,
+    required this.delay,
+    required this.child
+  });
+
   @override
   Widget build(BuildContext context) {
-    final curvedAnimation = CurvedAnimation(parent: animation, curve: Interval(delay, (delay + 0.5).clamp(0.0, 1.0), curve: Curves.easeOutCubic));
-    return AnimatedBuilder(animation: curvedAnimation, builder: (context, child) {
-      return Transform.translate(offset: Offset(0, (1.0 - curvedAnimation.value) * 30), child: Opacity(opacity: curvedAnimation.value, child: child));
-    }, child: child);
+    // --- THIS LINE DEFINES THE VARIABLE ---
+    final curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Interval(delay, (delay + 0.5).clamp(0.0, 1.0), curve: Curves.easeOutCubic)
+    );
+
+    return AnimatedBuilder(
+        animation: curvedAnimation,
+        builder: (context, child) {
+          // --- THIS LINE USES THE VARIABLE ---
+          return Transform.translate(
+              offset: Offset(0, (1.0 - curvedAnimation.value) * 30),
+              child: Opacity(opacity: curvedAnimation.value, child: child)
+          );
+        },
+        child: child
+    );
   }
 }

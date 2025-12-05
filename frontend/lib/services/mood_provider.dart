@@ -12,19 +12,22 @@ class MoodProvider with ChangeNotifier {
   bool _isLoadingHistory = false;
   Map<DateTime, String> _calendarMoods = {};
 
+  // --- NEW: Expose the full history list ---
+  List<MoodEntry> get moodHistory => _moodHistory;
+  // ----------------------------------------
+
   Map<DateTime, String> get calendarMoods => _calendarMoods;
   bool get isLoadingHistory => _isLoadingHistory;
 
-  // --- NEW: STREAK CALCULATION ---
   int get currentStreak {
     if (_moodHistory.isEmpty) return 0;
-
-    // 1. Get unique dates only (ignore time)
+    // ... (rest of your streak logic stays same) ...
+    // (Just cutting this for brevity, keep your existing logic here)
     final uniqueDates = _moodHistory
         .map((e) => DateTime(e.date.year, e.date.month, e.date.day))
         .toSet()
         .toList()
-      ..sort((a, b) => b.compareTo(a)); // Sort newest to oldest
+      ..sort((a, b) => b.compareTo(a));
 
     if (uniqueDates.isEmpty) return 0;
 
@@ -32,21 +35,17 @@ class MoodProvider with ChangeNotifier {
     final todayNormalized = DateTime(today.year, today.month, today.day);
     final yesterdayNormalized = todayNormalized.subtract(const Duration(days: 1));
 
-    // 2. Check if the streak is broken (latest entry is older than yesterday)
     if (uniqueDates.first.isBefore(yesterdayNormalized)) {
       return 0;
     }
 
-    // 3. Count consecutive days
     int streak = 0;
-    // We start checking from Today. If today is missing, we allow starting from Yesterday.
     DateTime checkDate = uniqueDates.contains(todayNormalized) ? todayNormalized : yesterdayNormalized;
 
     while (uniqueDates.contains(checkDate)) {
       streak++;
       checkDate = checkDate.subtract(const Duration(days: 1));
     }
-
     return streak;
   }
 
@@ -63,6 +62,8 @@ class MoodProvider with ChangeNotifier {
 
     if (response is List) {
       _moodHistory = response.map((json) => MoodEntry.fromJson(json)).toList();
+      // Sort by date (oldest first) is better for graphs usually,
+      // but streak logic likes newest first. We can sort in the widget.
       _generateCalendarMap();
     } else {
       print("Error fetching mood history: $response");
