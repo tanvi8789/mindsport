@@ -21,6 +21,8 @@ import 'screens/mood_calender.dart';
 import 'screens/resources_screen.dart';
 import 'screens/exercises_screen.dart';
 import 'screens/chat_session_screen.dart';
+import 'package:mindsport/screens/memory_game_screen.dart';
+import 'package:mindsport/screens/color_game_screen.dart';
 
 // --- THEME DEFINITION ---
 class MindSportTheme {
@@ -139,6 +141,8 @@ class MindSportApp extends StatelessWidget {
         '/history': (context) => const MoodHistoryScreen(),
         '/resources': (context) => const ResourcesScreen(),
         '/exercises': (context) => const ExercisesScreen(),
+        '/memory-game': (context) => const MemoryGameScreen(),
+        '/color-game': (context) => const ColorGameScreen(),
       },
     );
   }
