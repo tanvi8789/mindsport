@@ -2,62 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mindsport/services/auth_provider.dart';
 import 'package:mindsport/services/user_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:mindsport/main.dart'; // Import theme colors
 
 class AppSidebar extends StatelessWidget {
   const AppSidebar({super.key});
 
-  // --- LOGIC: Open External Link ---
-  Future<void> _launchForumUrl() async {
-    // Your specific URL
-    const url = 'https://mindsport-chatterbox.lovable.app';
-
-    final Uri uri = Uri.parse(url);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint('Could not launch url: $e');
-    }
-  }
-
-  // --- VISUALS: Consolidated Tile Builder ---
+  // --- TILE BUILDER ---
   Widget _buildListTile(
       BuildContext context, {
         required IconData icon,
         required String title,
-        String? routeName, // Optional: if navigation
-        VoidCallback? onTap, // Optional: if custom action (like URL)
+        required String routeName,
       }) {
-    // Check if this tile is the currently active page (for highlighting)
+    // Check if this tile is the currently active page
     final String? currentRoute = ModalRoute.of(context)?.settings.name;
-    final bool isSelected = (routeName != null && currentRoute == routeName);
+    final bool isSelected = (currentRoute == routeName);
 
-    // Dark Theme Colors
-    final Color iconColor = isSelected ? Colors.white : Colors.white.withOpacity(0.9);
-    final Color textColor = isSelected ? Colors.white : Colors.white.withOpacity(0.9);
-    final Color tileColor = isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent;
+    // Theme Colors
+    final Color activeColor = MindSportTheme.primaryGreen;
+    final Color inactiveColor = MindSportTheme.darkText;
 
     return ListTile(
-      leading: Icon(icon, color: iconColor),
+      leading: Icon(icon, color: isSelected ? activeColor : inactiveColor.withOpacity(0.6)),
       title: Text(
         title,
         style: TextStyle(
-          color: textColor,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? activeColor : inactiveColor,
           fontFamily: 'Nunito',
         ),
       ),
-      tileColor: tileColor,
+      // Subtle background highlight for active item
+      tileColor: isSelected ? activeColor.withOpacity(0.1) : Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
       onTap: () {
         Navigator.pop(context); // Always close the drawer first
 
-        if (onTap != null) {
-          // Case A: Custom Action (URL or Logout)
-          onTap();
-        } else if (routeName != null && !isSelected) {
-          // Case B: Navigation
+        if (!isSelected) {
+          // Navigate to the internal route
           Navigator.pushNamed(context, routeName);
         }
       },
@@ -66,108 +48,81 @@ class AppSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We access providers for user info and logout logic
-    final userProvider = Provider.of<UserProvider>(context);
-    final user = userProvider.user;
+    final user = Provider.of<UserProvider>(context).user;
 
     return Drawer(
-      child: Container(
-        color: const Color(0xFF2D2D2D), // Your Dark Background
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- Header ---
-            Padding(
-              padding: const EdgeInsets.only(top: 60.0, left: 24.0, bottom: 30.0, right: 24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'mindsport.',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontFamily: 'Nunito',
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_circle_left_outlined, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  )
-                ],
+      backgroundColor: MindSportTheme.primaryBackground, // Matches app background
+      child: Column(
+        children: [
+          // --- HEADER ---
+          UserAccountsDrawerHeader(
+            decoration: const BoxDecoration(
+              color: MindSportTheme.softLavender, // Lavender header
+            ),
+            accountName: Text(
+              user?.name ?? 'Athlete',
+              style: const TextStyle(
+                color: MindSportTheme.darkText,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                fontFamily: 'Nunito',
               ),
             ),
-
-            // --- Navigation Items ---
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _buildListTile(context, icon: Icons.home_outlined, title: 'Home', routeName: '/home'),
-                  _buildListTile(context, icon: Icons.chat_bubble_outline, title: 'ChatBot', routeName: '/chat'),
-                  _buildListTile(context, icon: Icons.fitness_center, title: 'Exercises', routeName: '/exercises'),
-                  _buildListTile(context, icon: Icons.notifications_none, title: 'Reminders', routeName: '/reminders'),
-                  _buildListTile(context, icon: Icons.library_books_outlined, title: 'Resources', routeName: '/resources'),
-
-                  // External Link
-                  _buildListTile(
-                      context,
-                      icon: Icons.people_outline,
-                      title: 'Community Forum',
-                      onTap: _launchForumUrl
-                  ),
-                ],
-              ),
+            accountEmail: Text(
+              user?.email ?? '',
+              style: const TextStyle(color: Colors.black54, fontFamily: 'Nunito'),
             ),
-
-            // --- Bottom Section ---
-            const Divider(color: Colors.white24, indent: 20, endIndent: 20),
-
-            // Profile Link
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.white,
-                radius: 16,
-                child: Text(
-                  user?.name.substring(0, 1).toUpperCase() ?? 'A',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2D2D2D)),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Text(
+                user?.name.isNotEmpty == true ? user!.name.substring(0, 1).toUpperCase() : 'A',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: MindSportTheme.primaryGreen,
                 ),
               ),
-              title: Text(
-                  user?.name ?? 'User Profile',
-                  style: const TextStyle(color: Colors.white70, fontFamily: 'Nunito')
-              ),
+            ),
+          ),
+
+          // --- NAVIGATION ITEMS ---
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              children: [
+                _buildListTile(context, icon: Icons.home_outlined, title: 'Home', routeName: '/home'),
+                _buildListTile(context, icon: Icons.person_outline, title: 'Profile', routeName: '/profile'),
+                _buildListTile(context, icon: Icons.alarm, title: 'Reminders', routeName: '/reminders'),
+                _buildListTile(context, icon: Icons.fitness_center, title: 'Mental Gym', routeName: '/exercises'),
+                _buildListTile(context, icon: Icons.chat_bubble_outline, title: 'Chat Bot', routeName: '/chat'),
+                _buildListTile(context, icon: Icons.library_books_outlined, title: 'Resources', routeName: '/resources'),
+
+                // --- FORUM LINK (Updated) ---
+                // Now points to the internal /forum route
+                _buildListTile(context, icon: Icons.people_outline, title: 'Community Forum', routeName: '/forum'),
+              ],
+            ),
+          ),
+
+          // --- LOGOUT ---
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListTile(
+              leading: const Icon(Icons.logout, color: Colors.black54),
+              title: const Text('Logout', style: TextStyle(fontFamily: 'Nunito')),
               onTap: () {
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+                authProvider.logout(userProvider);
+
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/profile');
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
               },
             ),
-
-            // Logout Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.logout, color: Colors.white70),
-                label: const Text('Logout', style: TextStyle(color: Colors.white70)),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.white30),
-                  minimumSize: const Size.fromHeight(45),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                onPressed: () {
-                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-                  // Use AuthProvider for clean logout
-                  authProvider.logout(userProvider);
-
-                  Navigator.pop(context);
-                  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+        ],
       ),
     );
   }

@@ -29,7 +29,7 @@ class ResourcesScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             children: [
               const Text(
-                'Learn & Listen',
+                'Learn & Train',
                 style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -38,7 +38,7 @@ class ResourcesScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               const Text(
-                'Curated articles and playlists to boost your mental game.',
+                'Curated articles, music, and workouts to boost your game.',
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 20),
@@ -53,7 +53,6 @@ class ResourcesScreen extends StatelessWidget {
                     title: "Understanding Performance Anxiety",
                     subtitle: "Why it happens and how to use it",
                     icon: Icons.read_more,
-                    // Replace with actual article URLs
                     action: () => _launchUrl('https://www.google.com/search?q=athlete+performance+anxiety'),
                   ),
                   _ResourceItem(
@@ -73,17 +72,17 @@ class ResourcesScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // --- 2. PLAYLISTS (Spotify/YouTube) ---
+              // --- 2. MUSIC PLAYLISTS ---
               _buildSection(
-                title: "Curated Playlists",
+                title: "Audio & Music",
                 icon: Icons.headphones,
-                color: MindSportTheme.softLavender, // Calm color for media
+                color: MindSportTheme.softLavender,
                 items: [
                   _ResourceItem(
                     title: "Pre-game Hype",
                     subtitle: "High energy tracks on Spotify",
                     icon: Icons.music_note,
-                    action: () => _launchUrl('https://open.spotify.com/genre/workout'), // Example Spotify link
+                    action: () => _launchUrl('https://open.spotify.com/genre/workout'),
                   ),
                   _ResourceItem(
                     title: "Post-game Calm",
@@ -92,13 +91,44 @@ class ResourcesScreen extends StatelessWidget {
                     action: () => _launchUrl('https://open.spotify.com/genre/sleep'),
                   ),
                   _ResourceItem(
-                    title: "Muscle Relaxation Guide",
-                    subtitle: "10-minute YouTube session",
-                    icon: Icons.video_library,
-                    action: () => _launchUrl('https://www.youtube.com/results?search_query=progressive+muscle+relaxation+for+athletes'),
+                    title: "Guided Visualization",
+                    subtitle: "10-minute mental rehearsal",
+                    icon: Icons.visibility,
+                    action: () => _launchUrl('https://www.youtube.com/results?search_query=guided+visualization+for+athletes'),
                   ),
                 ],
               ),
+
+              const SizedBox(height: 16),
+
+              // --- 3. WORKOUT ROUTINES (NEW) ---
+              _buildSection(
+                title: "Workout Routines",
+                icon: Icons.fitness_center,
+                color: Colors.orangeAccent.withOpacity(0.8), // Distinct color
+                items: [
+                  _ResourceItem(
+                    title: "Full Body HIIT",
+                    subtitle: "20-minute intense conditioning",
+                    icon: Icons.play_circle_fill,
+                    action: () => _launchUrl('https://youtu.be/M0uO8X3_tEA?si=dupZxyHGRY8QmL2c'),
+                  ),
+                  _ResourceItem(
+                    title: "Yoga for Athletes",
+                    subtitle: "Improve flexibility & mobility",
+                    icon: Icons.self_improvement,
+                    action: () => _launchUrl('https://youtu.be/wCUI1bwlJqA?si=goA6oscv3gOyBCFx'),
+                  ),
+                  _ResourceItem(
+                    title: "Core Strength",
+                    subtitle: "Stability essentials",
+                    icon: Icons.accessibility_new,
+                    action: () => _launchUrl('https://youtu.be/dJlFmxiL11s?si=wJ3f-Rz2cd4oJsNo'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 80),
             ],
           ),
         ],
@@ -109,9 +139,7 @@ class ResourcesScreen extends StatelessWidget {
   // --- Helper to build specific resource rows ---
   Future<void> _launchUrl(String urlString) async {
     final Uri url = Uri.parse(urlString);
-    // Use external application mode to open in Browser/Spotify app
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      // If direct launch fails, try default (in-app browser for some configs)
       if (!await launchUrl(url)) {
         throw Exception('Could not launch $url');
       }
@@ -154,7 +182,6 @@ class ResourcesScreen extends StatelessWidget {
   }
 }
 
-// Data class for items
 class _ResourceItem {
   final String title;
   final String subtitle;

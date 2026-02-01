@@ -10,7 +10,7 @@ class ChatService {
   // For local development with emulator: 'http://10.0.2.2:5000/api'
   // For local development with physical device: 'http://YOUR_LOCAL_IP:5000/api'
   // For production: 'https://your-domain.com/api'
-  final String _baseUrl = 'http://10.223.43.94:5000/api'; // Example for Android emulator
+  final String _baseUrl = 'http://192.168.1.8:5000/api'; // Example for Android emulator
 
   final _storage = const FlutterSecureStorage();
   final String _sessionKey = 'current_session_id';

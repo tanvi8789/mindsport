@@ -133,7 +133,7 @@ class MindSportApp extends StatelessWidget {
         '/register': (context) => const SignupScreen(),
         '/reminders': (context) => const RemindersScreen(),
         '/profile': (context) => const ProfileScreen(),
-        '/forum': (context) => CommunityForum(),
+        '/forum': (context) => const CommunityForum(),
         '/chat': (context) => const ChatPage(),
         '/chat-sessions': (context) => const ChatSessionScreen(), // Add this line
         '/history': (context) => const MoodHistoryScreen(),
