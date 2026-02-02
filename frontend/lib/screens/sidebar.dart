@@ -192,6 +192,8 @@ const Divider(height: 30, thickness: 1, indent: 16, endIndent: 16),
 _buildGamesSection(context),
 const Divider(height: 20, thickness: 1, indent: 16, endIndent: 16),
 
+// In sidebar.dart, add this to the navigation items list:
+_buildListTile(context, icon: Icons.restaurant, title: 'Diet Plan', routeName: '/diet-plan'),
 _buildListTile(context, icon: Icons.chat_bubble_outline, title: 'Chat Bot', routeName: '/chat'),
 _buildListTile(context, icon: Icons.library_books_outlined, title: 'Resources', routeName: '/resources'),
 _buildListTile(context, icon: Icons.people_outline, title: 'Community Forum', routeName: '/forum'),

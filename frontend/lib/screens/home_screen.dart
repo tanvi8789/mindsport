@@ -584,7 +584,7 @@ const Text("Recovery & Load", style: TextStyle(fontSize: 16, fontWeight: FontWei
 const SizedBox(height: 16),
 _buildSliderRow("Sleep", _sleepValue, MindSportTheme.primaryGreen, (v) => setState(() => _sleepValue = v)),
 const SizedBox(height: 12),
-_buildSliderRow("Strain", _physicalValue, Colors.orangeAccent, (v) => setState(() => _physicalValue = v)),
+_buildSliderRow("Physical Health", _physicalValue, Colors.orangeAccent, (v) => setState(() => _physicalValue = v)),
 ],
 ),
 );

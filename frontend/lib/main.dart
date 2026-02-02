@@ -23,6 +23,7 @@ import 'screens/exercises_screen.dart';
 import 'screens/chat_session_screen.dart';
 import 'package:mindsport/screens/memory_game_screen.dart';
 import 'package:mindsport/screens/color_game_screen.dart';
+import 'package:mindsport/screens/diet_plan_screen.dart';
 
 // --- THEME DEFINITION ---
 class MindSportTheme {
@@ -143,6 +144,7 @@ class MindSportApp extends StatelessWidget {
         '/exercises': (context) => const ExercisesScreen(),
         '/memory-game': (context) => const MemoryGameScreen(),
         '/color-game': (context) => const ColorGameScreen(),
+        '/diet-plan': (context) => const DietPlanScreen(),
       },
     );
   }
